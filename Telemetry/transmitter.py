@@ -28,6 +28,12 @@ pub.bind("tcp://*:5556")
 # Define message end sequence.
 end = b'EOM\n'
 
+def removeExtraBytes(raw):
+    newBytes = raw
+    while newBytes[0] < 128:
+       newBytes = newBytes[1:]
+    return newBytes
+
 def addTimestampToStruct(data):
     buffer = msgpack.unpackb(data)
     buffer["timeStamp"] = round(time.time(), 3)
@@ -52,7 +58,8 @@ def readFromArduino(queue, exit_event):
     '''Read data from serial.'''
     while not exit_event.is_set():
         try:
-            queue.put(addTimestampToStruct(link.read_until(end).rstrip(end)))
+            b = removeExtraBytes(link.read_until(end).rstrip(end))
+            queue.put(addTimestampToStruct(b))
             logging.info('Producer received data.')
         except:
             traceback.print_exc()
@@ -85,6 +92,7 @@ if __name__ == '__main__':
         # Throw away first and second reading
         _ = link.read_until(end).rstrip(end)
         _2 = link.read_until(end).rstrip(end)
+        link.flushInput()
         # Set up data queue
         pipeline = queue.Queue(maxsize=100)
         # Create exit event
