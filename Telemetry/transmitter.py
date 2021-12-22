@@ -25,9 +25,9 @@ context = zmq.Context.instance()
 pub = context.socket(zmq.PUB)
 pub.bind("tcp://*:5556")
 
-# Define the pair socket using the Context.
-pair = context.socket(zmq.PAIR)
-pair.bind("tcp://*:55561")
+# Define the rep socket using the Context.
+rep = context.socket(zmq.REP)
+rep.bind("tcp://*:55561")
 
 # Define message end sequence.
 end = b'EOM\n'
@@ -38,7 +38,7 @@ def updateSystemTime(timestamp):
     time.clock_settime(clk_id, float(timestamp))
 
 def sendSyncRequestSuccess():
-    pair.send(msgpack.packb(True))
+    rep.send(msgpack.packb(True))
 
 def removeExtraBytes(raw):
     newBytes = raw
@@ -101,7 +101,7 @@ def broadcastDataZmq(queue, exit_event):
 def receiveTimestampSync(exit_event):
     while not exit_event.is_set():
         try:
-            newTimestamp = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
+            newTimestamp = msgpack.unpackb(rep.recv(flags=zmq.NOBLOCK))
             logging.info(f"Updating timestamp with {newTimestamp}")
             updateSystemTime(newTimestamp)
             sendSyncRequestSuccess()
