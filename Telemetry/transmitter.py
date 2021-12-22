@@ -21,12 +21,24 @@ log_level = logging.INFO
 # ZeroMQ Context.
 context = zmq.Context.instance()
 
-# Define the socket using the Context.
+# Define the pub socket using the Context.
 pub = context.socket(zmq.PUB)
 pub.bind("tcp://*:5556")
 
+# Define the pair socket using the Context.
+pair = context.socket(zmq.PAIR)
+pair.bind("tcp://*:55561")
+
 # Define message end sequence.
 end = b'EOM\n'
+
+def updateSystemTime(timestamp):
+    #print(timestamp)
+    clk_id = time.CLOCK_REALTIME
+    time.clock_settime(clk_id, float(timestamp))
+
+def sendSyncRequestSuccess():
+    pair.send(msgpack.packb(True))
 
 def removeExtraBytes(raw):
     newBytes = raw
@@ -53,6 +65,8 @@ def findArduinoPort():
         logging.info('Multiple Arduinos found. Connecting to the first one.')
     logging.info('Found an Arduino at %s.', arduino_ports[0])
     return arduino_ports[0]
+
+#
 
 def readFromArduino(queue, exit_event):
     '''Read data from serial.'''
@@ -84,6 +98,23 @@ def broadcastDataZmq(queue, exit_event):
     logging.info('Consumer received event. Exiting now.')
     pub.close()
 
+def receiveTimestampSync(exit_event):
+    while not exit_event.is_set():
+        try:
+            newTimestamp = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
+            logging.info(f"Updating timestamp with {newTimestamp}")
+            updateSystemTime(newTimestamp)
+            sendSyncRequestSuccess()
+        except zmq.ZMQError as e:
+            if e.errno == zmq.EAGAIN:
+                pass    # no message ready yet
+            else:
+                traceback.print_exc()
+        except:
+            traceback.print_exc()
+            exit_event.set()
+        time.sleep(1)
+
 if __name__ == '__main__':
     try:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log_level, datefmt="%H:%M:%S")
@@ -98,9 +129,10 @@ if __name__ == '__main__':
         # Create exit event
         exit_event = threading.Event()
         # Spawn worker threads
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             executor.submit(readFromArduino, pipeline, exit_event)
             executor.submit(broadcastDataZmq, pipeline, exit_event)
+            executor.submit(receiveTimestampSync, exit_event)
     except KeyboardInterrupt:
         logging.info('Setting exit event.')
         exit_event.set()
