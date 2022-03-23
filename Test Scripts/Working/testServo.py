@@ -20,13 +20,16 @@ try:
        servo.min()
        print("counterclockwise")
        sleep(t)
+
        servo.max()
        print("clockwise")
        sleep(t)
+
        #servo.value = -0.1
        servo.mid()
        print("stop")
        sleep(t)
+
 except KeyboardInterrupt:
    print("keyboard")
 
