@@ -102,11 +102,12 @@ def receiveTimestampSync(exit_event):
     while not exit_event.is_set():
         try:
             newTimestamp = msgpack.unpackb(rep.recv(flags=zmq.NOBLOCK))
-            logging.info(f"Updating timestamp with {newTimestamp}")
+            logging.info("Updating timestamp with %d", newTimestamp)
             updateSystemTime(newTimestamp)
             sendSyncRequestSuccess()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
+                logging.info("waiting for msg")
                 pass    # no message ready yet
             else:
                 traceback.print_exc()
@@ -119,19 +120,19 @@ if __name__ == '__main__':
     try:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log_level, datefmt="%H:%M:%S")
         # Detect Arduino port and open serial connection
-        link = serial.Serial(findArduinoPort(), 500000)
+#        link = serial.Serial(findArduinoPort(), 500000)
         # Throw away first and second reading
-        _ = link.read_until(end).rstrip(end)
-        _2 = link.read_until(end).rstrip(end)
-        link.flushInput()
+#        _ = link.read_until(end).rstrip(end)
+#        _2 = link.read_until(end).rstrip(end)
+#        link.flushInput()
         # Set up data queue
         pipeline = queue.Queue(maxsize=100)
         # Create exit event
         exit_event = threading.Event()
         # Spawn worker threads
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            executor.submit(readFromArduino, pipeline, exit_event)
-            executor.submit(broadcastDataZmq, pipeline, exit_event)
+#            executor.submit(readFromArduino, pipeline, exit_event)
+#            executor.submit(broadcastDataZmq, pipeline, exit_event)
             executor.submit(receiveTimestampSync, exit_event)
     except KeyboardInterrupt:
         logging.info('Setting exit event.')
