@@ -1,7 +1,7 @@
 import serial
 import time
-# port is /dev/ttyS0 if using uart
-ser = serial.Serial("/dev/ttyUSB0", 9600)
+# port is /dev/ttyS0 if using uart /dev/ttyACM0 if using Arduino Uno
+ser = serial.Serial("/dev/ttyACM0", 9600)
 while True:
 #	ser.write('M'.encode('utf-8'))
 #	time.sleep(1)

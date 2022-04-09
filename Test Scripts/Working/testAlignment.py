@@ -3,7 +3,7 @@ import serial
 import time
 
 # Serial setup: port is /dev/ttyS0 if uart
-ard = serial.Serial("/dev/ttyUSB0", 9600)
+ard = serial.Serial("/dev/ttyACM0", 9600)
 
 # Servo setup
 mxp = 0.0025

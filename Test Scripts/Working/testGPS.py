@@ -14,6 +14,8 @@ print("connected to: " + ser.portstr)
 try:
    while True:
       raw = ser.readline()
+#      if len(raw) > 0:
+#          print(raw)
       if (raw.startswith(b"$GPGGA")):
          msg = pynmea2.parse(raw.decode("utf-8"))
          print("%s, %s" % (msg.lat, msg.lon))
