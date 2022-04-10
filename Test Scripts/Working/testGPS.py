@@ -2,6 +2,7 @@ import pynmea2
 import serial
 import time
 import msgpack
+import math
 
 ser = serial.Serial(
      port="/dev/serial0",
@@ -11,6 +12,28 @@ ser = serial.Serial(
 
 print("connected to: " + ser.portstr)
 
+def truncate(number, digits) -> float:
+    stepper = 10.0 ** digits
+    return math.trunc(stepper * number) / stepper
+
+def truncateWholeNumbers(f):
+   return f - int(f)
+
+def convertCoordinate(strC, strD):
+   if not len(strC):
+     print("FAILED TO CONVERT COORDINATE")
+     return 0.0
+   c = float(strC)
+   deg = int(c / 100)
+   min = int(c) % 100
+   sec = truncate(truncateWholeNumbers(c) * 100, 7)
+#   print(deg, min, sec)
+   coord = deg + min/60 + sec/3600
+
+   if(strD == 'S' or strD == 'W'):
+     coord = -coord
+   return coord
+
 try:
    while True:
       raw = ser.readline()
@@ -18,7 +41,15 @@ try:
 #          print(raw)
       if (raw.startswith(b"$GPGGA")):
          msg = pynmea2.parse(raw.decode("utf-8"))
-         print("%s, %s" % (msg.lat, msg.lon))
+         print(msg.lat, msg.lon)
+
+         if (len(msg.lat) < 0 or len(msg.lon) < 0): # invalid data parsed
+            continue
+
+         lat = convertCoordinate(msg.lat, msg.lat_dir)
+         lon = convertCoordinate(msg.lon, msg.lon_dir)
+         print(lat, lon)
+
       time.sleep(0.01)
 except KeyboardInterrupt:
    print("exit")
