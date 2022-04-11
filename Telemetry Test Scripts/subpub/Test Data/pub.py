@@ -39,6 +39,8 @@ testData = {
     "OV" : True, # Overvolt Protection
     "SM" : True, # Solar Mode
     "EM" : True, # Motor Enabled
+    ## end motor control data
+    "Speed" : 13.2, # Speed of boat measured from gps
     "timeStamp" : 0.0
 }
 
@@ -54,6 +56,7 @@ def modifyData(data):
     data["OV"] = True
     data["SM"] = True
     data["EM"] = True
+    data["Speed"] = random.uniform(0.0, 25.0)
     return data
 
 def sendPubData(exit_event):
