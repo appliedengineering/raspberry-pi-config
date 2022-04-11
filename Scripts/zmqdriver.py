@@ -20,7 +20,7 @@ class zmqdriver: # for gps positioning communication
         self.__sub.subscribe("")
 
     def transmitPosition(self, lat, lon):
-        print(lat, lon)
+        #print(lat, lon)
         self.__pub.send(msgpack.packb([lat, lon]))
 
     def receivePosition(self):
