@@ -9,7 +9,7 @@ class gpsdriver:
    def __readSer(self):
       return self.ser.readline()
 
-   def getCoordinates(self):
+   def getCoordinates(self): # lat, lon
       raw = self.__readSer()
       if (raw.startswith(b"$GPGGA")):
           try:

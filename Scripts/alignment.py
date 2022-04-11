@@ -10,6 +10,7 @@ import compassmodule
 import servodriver
 import gpsdriver
 import alignmentcalc
+import zmqdriver
 
 # Set logging verbosity
 # CRITICAL will not log anything
@@ -20,11 +21,13 @@ log_level = logging.INFO
 compass = compassmodule.compassmodule("/dev/ttyACM0", 9600)
 servo = servodriver.servodriver(26, 0.15)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
+zmq = zmqdriver.zmqdriver("192.168.3.2") # 192.168.3.2 for atomic pi
+alignmentc = alignmentcalc.alignmentcalc()
 
 ## Env Vars
 
 acceptableError = 10 # in degrees
-targetHeading = 180.0 # shared var between two threads
+targetHeading = 0.0 # shared var between two threads
 
 ##
 
@@ -60,10 +63,20 @@ def alignmentThread(exit_event):
 def positioningThread(exit_event):
    while not exit_event.is_set():
       try:
-        
+         boatC = gps.getCoordinates() # lat, lon
+         zmq.transmitPosition(boatC[0], boatC[1])
+
+         groundC = zmq.receivePosition() # lat, lon
+         
+         if len(boatC) != 2 or len(groundC) != 2:
+            print(f"INVALID COORDINATES IN POS THREAD - {len(boatC)} : {len(groundC)}")
+            pass
+
+         targetHeading = alignmentc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])
+
       except:
-        traceback.print_exc()
-        exit_event.set()
+         traceback.print_exc()
+         exit_event.set()
       time.sleep(0.01)
 
 ###
@@ -75,7 +88,7 @@ if __name__ == '__main__':
       exit_event = threading.Event()
 
       with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-         executor.submit(alignmentThread, exit_event)
+         #executor.submit(alignmentThread, exit_event)
          executor.submit(positioningThread, exit_event)
 
    except KeyboardInterrupt:
