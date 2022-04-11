@@ -9,6 +9,7 @@ import time
 import compassmodule
 import servodriver
 import gpsdriver
+import alignmentcalc
 
 # Set logging verbosity
 # CRITICAL will not log anything
@@ -31,7 +32,7 @@ def alignmentThread(exit_event):
    while not exit_event.is_set():
       try:
          heading = compass.read()
-         logging.info(heading)
+         logging.info(heading, targetHeading)
 
          headingDelta = heading - targetHeading
 
@@ -52,7 +53,18 @@ def alignmentThread(exit_event):
       except:
          traceback.print_exc()
          exit_event.set()
-      time.sleep(.01)
+      time.sleep(0.01)
+
+##
+
+def positioningThread(exit_event):
+   while not exit_event.is_set():
+      try:
+        
+      except:
+        traceback.print_exc()
+        exit_event.set()
+      time.sleep(0.01)
 
 ###
 
@@ -64,6 +76,7 @@ if __name__ == '__main__':
 
       with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
          executor.submit(alignmentThread, exit_event)
+         executor.submit(positioningThread, exit_event)
 
    except KeyboardInterrupt:
       logging.info('Setting exit event.')
