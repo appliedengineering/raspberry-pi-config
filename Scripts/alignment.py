@@ -88,7 +88,7 @@ if __name__ == '__main__':
       exit_event = threading.Event()
 
       with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-         #executor.submit(alignmentThread, exit_event)
+         executor.submit(alignmentThread, exit_event)
          executor.submit(positioningThread, exit_event)
 
    except KeyboardInterrupt:
