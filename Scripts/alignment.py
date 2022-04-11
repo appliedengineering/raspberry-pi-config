@@ -8,6 +8,7 @@ import time
 
 import compassmodule
 import servodriver
+import gpsdriver
 
 # Set logging verbosity
 # CRITICAL will not log anything
@@ -17,6 +18,7 @@ log_level = logging.INFO
 
 compass = compassmodule.compassmodule("/dev/ttyACM0", 9600)
 servo = servodriver.servodriver(26, 0.15)
+gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 
 ## Env Vars
 
