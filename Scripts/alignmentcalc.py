@@ -14,7 +14,7 @@ class alignmentcalc:
 
       return bearing
 
-   # refer to haversine formula on wikipedia
+   # refer to haversine formula on wikipedia (in meters)
    def distanceBetween(lat1, lon1, lat2, lon2):
       deltaLon = (lon2 - lon1) / 2
       deltaLat = (lat2 - lat1) / 2
