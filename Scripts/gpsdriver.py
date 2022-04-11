@@ -4,10 +4,10 @@ import time
 
 class gpsdriver:
    def __init__(self, p, b): #/dev/serial0, 115200
-      self.ser = serial.Serial(port=p, baudrate=b, timeout=0)
+      self.__ser = serial.Serial(port=p, baudrate=b, timeout=0)
 
    def __readSer(self):
-      return self.ser.readline()
+      return self.__ser.readline()
 
    def getCoordinates(self): # lat, lon
       raw = self.__readSer()

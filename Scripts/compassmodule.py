@@ -3,10 +3,10 @@ import time
 
 class compassmodule:
    def __init__(self, port, baudrate):
-      self.ser = serial.Serial(port, baudrate)
+      self.__ser = serial.Serial(port, baudrate)
 
    def __readSer(self):
-      return self.ser.readline()
+      return self.__ser.readline()
 
    def __castToFloat(self, raw):
       f = 0.0
