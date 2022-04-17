@@ -21,6 +21,32 @@ Raspberry Pi Boat Data Publish Socket Port = `5556`
 
 Raspberry Pi Boat Timestamp Reply Socket Port = `55561`
 
+# Boat Data Pack Spec
+
+`TP` = Throttle Percentage `uint64_t` or `int` 
+
+`DP` = Duty Percentage `uint64_t` or `int`
+
+`CP` = Chip Temperature `double`
+
+`BV` = Battery Voltage `double`
+
+`UV` = Under Voltage Protection `bool`
+
+`OV` = Over Voltage Protection `bool`
+
+`SM` = Solar Mode `bool`
+
+`EM` = Motor Enabled `bool`
+
+`timeStamp` = Data Timestamp `double`
+
+`posLat` = Position Latitude `double`
+
+`posLon` = Position Longitude `double`
+
+`speed` = Speed of boat in m/s `double`
+
 # Alignment ZMQ Network Spec
 
 Raspberry Pi GPS Alignment Publish Socket Port = `5551`
