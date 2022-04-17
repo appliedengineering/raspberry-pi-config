@@ -10,7 +10,6 @@ Raspberry Pi Network DHCP range = `192.168.1.2 - 192.168.1.255`
 
 Raspberry Pi PtP ip = `192.168.3.1`
 
----
 
 Atomic Pi Network DHCP range = `192.168.2.2 - 192.168.2.255`
 
@@ -26,6 +25,5 @@ Raspberry Pi Boat Timestamp Reply Socket Port = `55561`
 
 Raspberry Pi GPS Alignment Publish Socket Port = `5551`
 
----
 
 Atomic Pi GPS Alignment Publish Socket Port = `5552`
