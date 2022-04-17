@@ -5,6 +5,7 @@ import concurrent.futures
 import logging
 import msgpack
 import queue
+from Scripts.alignmentcalc import alignmentcalc
 import serial
 #import serial.tools.list_ports
 import threading
@@ -14,6 +15,7 @@ import time
 
 import motorcontrollerdriver
 import gpsdriver
+import alignmentcalc
 
 #
 motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 9600)
@@ -60,12 +62,33 @@ def sendSyncRequestSuccess():
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
 #    return msgpack.packb(buffer)
 
+previousBoatCoordinates = []
+previousBoatTimestamp = 0.0
+
 def addSupplementaryData(motordata):
-    motordata["timeStamp"] = round(time.time(), 3)
+    
+    # TIMESTAMP
+    timestamp = round(time.time(), 3)
+    motordata["timeStamp"] = timestamp
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
+    
+    # COORDINATES
     boatC = gps.getCoordinates() # lat lon
-    motordata["posLat"] = boatC[0]
-    motordata["posLon"] = boatC[1]
+    motordata["posLat"] = boatC[0] # lat
+    motordata["posLon"] = boatC[1] # lon
+
+    # SPEED
+    speed = 0.0
+    if len(previousBoatCoordinates) > 0:
+        distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
+        timeDelta = timestamp - previousBoatTimestamp
+        speed = round(distanceDelta / timeDelta, 3)
+
+    previousBoatCoordinates = boatC
+    previousBoatTimestamp = timestamp
+
+    motordata["speed"] = speed
+
     return motordata
 
 #
