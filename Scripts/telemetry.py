@@ -6,11 +6,19 @@ import logging
 import msgpack
 import queue
 import serial
-import serial.tools.list_ports
+#import serial.tools.list_ports
 import threading
 import traceback
 import zmq
 import time
+
+import motorcontrollerdriver
+import gpsdriver
+
+#
+motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 9600)
+gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
+
 
 # Set logging verbosity.
 # CRITICAL will not log anything.
@@ -40,31 +48,25 @@ def updateSystemTime(timestamp):
 def sendSyncRequestSuccess():
     rep.send(msgpack.packb(True))
 
-def removeExtraBytes(raw):
-    newBytes = raw
-    while newBytes[0] < 128:
-       newBytes = newBytes[1:]
-    return newBytes
+#def removeExtraBytes(raw):
+#    newBytes = raw
+#    while newBytes[0] < 128:
+#       newBytes = newBytes[1:]
+#    return newBytes
 
-def addTimestampToStruct(data):
-    buffer = msgpack.unpackb(data)
-    buffer["timeStamp"] = round(time.time(), 3)
+#def addTimestampToStruct(data):
+#    buffer = msgpack.unpackb(data)
+#    buffer["timeStamp"] = round(time.time(), 3)
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
-    return msgpack.packb(buffer)
+#    return msgpack.packb(buffer)
 
-def findArduinoPort():
-    '''Locate Arduino serial port.'''
-    arduino_ports = [
-        p.device
-        for p in serial.tools.list_ports.comports()
-        if 'Arduino' in p.description or 'Generic CDC' in p.description or 'ttyACM0' in p.description
-    ]
-    if not arduino_ports:
-        logging.error('No Arduino found.')
-    if len(arduino_ports) > 1:
-        logging.info('Multiple Arduinos found. Connecting to the first one.')
-    logging.info('Found an Arduino at %s.', arduino_ports[0])
-    return arduino_ports[0]
+def addSupplementaryData(motordata):
+    motordata["timeStamp"] = round(time.time(), 3)
+    # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
+    boatC = gps.getCoordinates() # lat lon
+    motordata["posLat"] = boatC[0]
+    motordata["posLon"] = boatC[1]
+    return motordata
 
 #
 
@@ -72,14 +74,21 @@ def readFromArduino(queue, exit_event):
     '''Read data from serial.'''
     while not exit_event.is_set():
         try:
-            b = removeExtraBytes(link.read_until(end).rstrip(end))
-            queue.put(addTimestampToStruct(b))
+            #b = removeExtraBytes(link.read_until(end).rstrip(end))
+            b = motorctrl.read()
+            try:
+                motordata = msgpack.unpackb(b)
+            except Exception:
+                logging.critical("invalid mtrctrl data")
+                pass
+
+            queue.put(msgpack.packb(addSupplementaryData(motordata)))
             logging.info('Producer received data.')
         except:
             traceback.print_exc()
             exit_event.set()
     logging.info('Producer received event. Exiting now.')
-    link.close()
+    #link.close()
 
 def broadcastDataZmq(queue, exit_event):
     '''Broadcast data with ZeroMQ.'''
@@ -119,12 +128,6 @@ def receiveTimestampSync(exit_event):
 if __name__ == '__main__':
     try:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log_level, datefmt="%H:%M:%S")
-        # Detect Arduino port and open serial connection
-#        link = serial.Serial(findArduinoPort(), 500000)
-        # Throw away first and second reading
-#        _ = link.read_until(end).rstrip(end)
-#        _2 = link.read_until(end).rstrip(end)
-#        link.flushInput()
         # Set up data queue
         pipeline = queue.Queue(maxsize=100)
         # Create exit event
