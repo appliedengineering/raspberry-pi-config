@@ -17,7 +17,7 @@ log_level = logging.INFO
 ctx = zmq.Context()
 sub = ctx.socket(zmq.SUB)
 
-address = "tcp://localhost:5556"
+address = "tcp://raspberrypi.local:5556"
 
 sub.connect(address) # change localhost to the IP of the other computer
 sub.subscribe("") # Subscribe to all topics

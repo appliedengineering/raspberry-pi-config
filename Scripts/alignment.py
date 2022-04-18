@@ -71,8 +71,8 @@ def positioningThread(exit_event):
          if len(boatC) != 2 or len(groundC) != 2:
             print(f"INVALID COORDINATES IN POS THREAD - {len(boatC)} : {len(groundC)}")
             pass
-
-         targetHeading = alignmentc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])
+         else:
+            targetHeading = alignmentc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])
 
       except:
          traceback.print_exc()
