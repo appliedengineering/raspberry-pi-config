@@ -47,6 +47,10 @@ Raspberry Pi Boat Timestamp Reply Socket Port = `55561`
 
 `speed` = Speed of boat in m/s `double`
 
+# Boat Motor Serial Communication Spec
+
+Consistently send `1` to motor controller to keep motor on
+
 # Alignment ZMQ Network Spec
 
 Raspberry Pi GPS Alignment Publish Socket Port = `5551`
