@@ -104,7 +104,7 @@ def readFromArduino(queue, exit_event):
                 motordata = msgpack.unpackb(b)
             except Exception:
                 logging.critical("invalid mtrctrl data")
-                pass
+                continue
 
             queue.put(msgpack.packb(addSupplementaryData(motordata)))
             logging.info('Producer received data.')
