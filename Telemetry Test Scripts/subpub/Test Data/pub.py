@@ -62,7 +62,9 @@ def modifyData(data):
 def sendPubData(exit_event):
     while not exit_event.is_set():
         try:
-            pub.send(msgpack.packb(modifyData(testData)))
+            d = msgpack.packb(modifyData(testData))
+            print(d)
+            pub.send(d)
             logging.info(f"Sent data with timestamp - {round(time.time(), 3)}")
             time.sleep(0.1)
         except:

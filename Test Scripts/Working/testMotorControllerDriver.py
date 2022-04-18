@@ -17,7 +17,7 @@ try:
        try:
            raw = mtrctrlSer.readline()
            raw = raw[:-4]
-#     print(raw[0], raw)
+#           print(raw)
            print(msgpack.unpackb(raw))
 #     print(mtrctrlSer.readline())
            time.sleep(0.1)

@@ -5,7 +5,6 @@ import concurrent.futures
 import logging
 import msgpack
 import queue
-from Scripts.alignmentcalc import alignmentcalc
 import serial
 #import serial.tools.list_ports
 import threading
@@ -15,7 +14,7 @@ import time
 
 import motorcontrollerdriver
 import gpsdriver
-import alignmentcalc
+from alignmentcalc import alignmentcalc
 
 #
 motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 9600)
@@ -42,6 +41,9 @@ rep.bind("tcp://*:55561")
 # Define message end sequence.
 end = b'EOM\n'
 
+previousBoatCoordinates = []
+previousBoatTimestamp = 0.0
+
 def updateSystemTime(timestamp):
     #print(timestamp)
     clk_id = time.CLOCK_REALTIME
@@ -62,16 +64,15 @@ def sendSyncRequestSuccess():
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
 #    return msgpack.packb(buffer)
 
-previousBoatCoordinates = []
-previousBoatTimestamp = 0.0
-
 def addSupplementaryData(motordata):
-    
+    global previousBoatCoordinates
+    global previousBoatTimestamp
+
     # TIMESTAMP
     timestamp = round(time.time(), 3)
     motordata["timeStamp"] = timestamp
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
-    
+
     # COORDINATES
     boatC = gps.getCoordinates() # lat lon
     motordata["posLat"] = boatC[0] # lat
@@ -139,7 +140,7 @@ def receiveTimestampSync(exit_event):
             sendSyncRequestSuccess()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
-                logging.info("waiting for msg")
+                logging.info("no timestamp update msg")
                 pass    # no message ready yet
             else:
                 traceback.print_exc()
@@ -157,8 +158,8 @@ if __name__ == '__main__':
         exit_event = threading.Event()
         # Spawn worker threads
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-#            executor.submit(readFromArduino, pipeline, exit_event)
-#            executor.submit(broadcastDataZmq, pipeline, exit_event)
+            executor.submit(readFromArduino, pipeline, exit_event)
+            executor.submit(broadcastDataZmq, pipeline, exit_event)
             executor.submit(receiveTimestampSync, exit_event)
     except KeyboardInterrupt:
         logging.info('Setting exit event.')
