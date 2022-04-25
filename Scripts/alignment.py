@@ -18,7 +18,7 @@ import zmqdriver
 # INFO will log more information
 log_level = logging.INFO
 
-compass = compassmodule.compassmodule("/dev/ttyACM0", 9600)
+compass = compassmodule.compassmodule("/dev/ttyUSB0", 9600)
 servo = servodriver.servodriver(26, 0.15)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 zmq = zmqdriver.zmqdriver("192.168.3.2") # 192.168.3.2 for atomic pi
@@ -70,6 +70,7 @@ def positioningThread(exit_event):
          
          if len(boatC) != 2 or len(groundC) != 2:
             print(f"INVALID COORDINATES IN POS THREAD - {len(boatC)} : {len(groundC)}")
+            time.sleep(0.01)
             continue
          
          targetHeading = alignmentc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])

@@ -17,7 +17,7 @@ import gpsdriver
 from alignmentcalc import alignmentcalc
 
 #
-motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 9600)
+motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB1", 115200)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 
 

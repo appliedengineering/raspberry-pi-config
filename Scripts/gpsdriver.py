@@ -14,8 +14,10 @@ class gpsdriver:
       if (raw.startswith(b"$GPGGA")):
           try:
               msg = pynmea2.parse(raw.decode("utf-8"))
+              lat = msg.latitude
+              lon = msg.longitude
           except:
               print("FAILED TO PARSE GPS DATA")
               return -1.0, -1.0
-          return msg.latitude, msg.longitude
+          return lat, lon
       return 0.0, 0.0
