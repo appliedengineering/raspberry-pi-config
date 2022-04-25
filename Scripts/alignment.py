@@ -26,16 +26,19 @@ alignmentc = alignmentcalc.alignmentcalc()
 
 ## Env Vars
 
-acceptableError = 10 # in degrees
+acceptableError = 20 # in degrees
 targetHeading = 0.0 # shared var between two threads
 
 ##
+
+def isOutsideAcceptableError(heading, targetHeading):
+   return min(abs((heading - 360) - targetHeading), min(abs(heading - targetHeading), abs(heading - (targetHeading - 360)))) > acceptableError
 
 def alignmentThread(exit_event):
    while not exit_event.is_set():
       try:
          heading = compass.read()
-         logging.info(heading, targetHeading)
+         print(heading, targetHeading)
 
          headingDelta = heading - targetHeading
 
@@ -45,7 +48,7 @@ def alignmentThread(exit_event):
             else:
                headingDelta -= 360
 
-         if abs(headingDelta) > acceptableError:
+         if isOutsideAcceptableError(heading, targetHeading):
             if headingDelta < 0:
                servo.turnCW()
             elif headingDelta > 0:
@@ -68,6 +71,11 @@ def positioningThread(exit_event):
 
          groundC = zmq.receivePosition() # lat, lon
          
+         if len(groundC) != 2:
+            print(f"No ground coordinates")
+            time.sleep(1)
+            continue
+
          if len(boatC) != 2 or len(groundC) != 2:
             print(f"INVALID COORDINATES IN POS THREAD - {len(boatC)} : {len(groundC)}")
             time.sleep(0.01)
