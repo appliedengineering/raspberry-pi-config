@@ -38,6 +38,10 @@ pub.bind("tcp://*:5556")
 rep = context.socket(zmq.REP)
 rep.bind("tcp://*:55561")
 
+# Define the pair socket using the Context.
+pair = context.socket(zmq.PAIR)
+pair.connect("tcp://localhost:5553")
+
 # Define message end sequence.
 end = b'EOM\n'
 
@@ -149,6 +153,24 @@ def receiveTimestampSync(exit_event):
             exit_event.set()
         time.sleep(1)
 
+def receiveMotorStatus(exit_event):
+    motorStatus = False
+    while not exit_event.is_set():
+        try:
+            motorStatus = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
+            logging.info("Received new motor status")
+        except zmq.ZMQError as e:
+            if e.errno == zmq.EAGAIN:
+                logging.info("no motor status update msg")
+                pass
+            else:
+                traceback.print_exc()
+        except:
+            traceback.print_exc()
+            exit_event.set()
+        motorctrl.sendMotorStatus(motorStatus)
+        time.sleep(1)
+
 if __name__ == '__main__':
     try:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log_level, datefmt="%H:%M:%S")
@@ -161,6 +183,7 @@ if __name__ == '__main__':
             executor.submit(readFromArduino, pipeline, exit_event)
             executor.submit(broadcastDataZmq, pipeline, exit_event)
             executor.submit(receiveTimestampSync, exit_event)
+            executor.submit(receiveMotorStatus, exit_event)
     except KeyboardInterrupt:
         logging.info('Setting exit event.')
         exit_event.set()

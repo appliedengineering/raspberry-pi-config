@@ -18,3 +18,16 @@ class motorcontrollerdriver:
         except Exception:
             print("corrupted data recv")
         return dict()
+
+    def sendMotorStatus(self, isOn):
+        d = 0
+        if isOn:
+            d = 5
+        try:
+            #print(d)
+            self.__mtrctrlSer.send(d + "\r\n")
+        except Exception:
+            print("Unable to send motor controller status")
+            return False
+        return True
+
