@@ -159,6 +159,7 @@ def receiveMotorStatus(exit_event):
         try:
             motorStatus = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
             logging.info("Received new motor status")
+            motorctrl.sendMotorStatus(motorStatus)
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
                 logging.info("no motor status update msg")
@@ -179,7 +180,7 @@ if __name__ == '__main__':
         # Create exit event
         exit_event = threading.Event()
         # Spawn worker threads
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             executor.submit(readFromArduino, pipeline, exit_event)
             executor.submit(broadcastDataZmq, pipeline, exit_event)
             executor.submit(receiveTimestampSync, exit_event)
