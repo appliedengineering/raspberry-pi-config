@@ -170,7 +170,7 @@ def receiveMotorStatus(exit_event):
             traceback.print_exc()
             exit_event.set()
         motorctrl.sendMotorStatus(motorStatus)
-        time.sleep(1)
+        time.sleep(0.1)
 
 if __name__ == '__main__':
     try:
