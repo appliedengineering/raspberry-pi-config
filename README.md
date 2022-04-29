@@ -19,7 +19,7 @@ Atomic Pi PtP ip = `192.168.3.2`
 
 Raspberry Pi Boat Data Publish Socket Port = `5556`
 
-Raspberry Pi Boat Timestamp Reply Socket Port = `55561`
+Raspberry Pi Boat Timestamp Reply Socket Port = Boat Data Port + `1` (`55561`)
 
 # Boat Data Pack Spec
 
@@ -49,7 +49,11 @@ Raspberry Pi Boat Timestamp Reply Socket Port = `55561`
 
 # Boat Motor Serial Communication Spec
 
-Consistently send `1` to motor controller to keep motor on
+Consistently send `5` to motor controller to keep motor on
+
+# Boat Motor Status Network Spec
+
+pilotapp Motor Status Pair Server Port = `5553`
 
 # Alignment ZMQ Network Spec
 
