@@ -23,9 +23,9 @@ Raspberry Pi Boat Timestamp Reply Socket Port = Boat Data Port + `1` (`55561`)
 
 # Boat Data Pack Spec
 
-`TP` = Throttle Percentage `uint64_t` or `int` 
+`TP` = Throttle Percentage (0-100) `uint64_t` or `int` 
 
-`DP` = Duty Percentage `uint64_t` or `int`
+`DP` = Duty Percentage (0-180) `uint64_t` or `int`
 
 `CP` = Chip Temperature `double`
 
@@ -33,11 +33,11 @@ Raspberry Pi Boat Timestamp Reply Socket Port = Boat Data Port + `1` (`55561`)
 
 `UV` = Under Voltage Protection `bool`
 
-`OV` = Over Voltage Protection `bool`
-
 `SM` = Solar Mode `bool`
 
-`EM` = Motor Enabled `bool`
+`EN` = Motor Enabled `bool`
+
+`BC` = Battery Current `double`
 
 `timeStamp` = Data Timestamp `double`
 
