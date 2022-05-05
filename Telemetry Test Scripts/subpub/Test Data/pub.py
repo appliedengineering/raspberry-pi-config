@@ -31,17 +31,17 @@ rep.bind("tcp://*:55561")
 end = b'EOM\n'
 
 testData = {
-    "TP" : 1, # Throttle Percent
-    "DP" : 100, # Duty Percent
+    "TP" : 35, # Throttle Percent
+    "DP" : 150, # Duty Percent
     "CP" : 30.0, # Chip Temp (float)
     "BV" : 24.0, # Battery Voltage
     "UV" : True, # Undervolt Protection
-    "OV" : True, # Overvolt Protection
     "SM" : True, # Solar Mode
-    "EM" : True, # Motor Enabled
+    "EN" : True, # Motor Enabled
+    "BC" : 15.0, # Battery Current
     ## end motor control data
-    "posLat" : 34.149498357400645,
-    "posLon" : -118.03001108128538,
+    "posLat" : 38.335196,
+    "posLon" : -121.092967,
     "speed" : 13.2, # Speed of boat measured from gps m/s
     "timeStamp" : 0.0
 }
@@ -51,15 +51,15 @@ startTimestamp = time.time()
 def modifyData(data):
     data["timeStamp"] = round(time.time(), 3)
     data["TP"] = random.randrange(1, 100)
-    data["DP"] = random.randrange(1, 100)
+    data["DP"] = random.randrange(1, 180)
     data["CP"] = random.uniform(25.0, 70.0)
-    data["BV"] = random.uniform(1.0, 40.0)
+    data["BV"] = random.uniform(20.0, 30.0)
     data["UV"] = True
-    data["OV"] = True
     data["SM"] = True
-    data["EM"] = True
-    data["posLat"] = 34.149498357400645
-    data["posLon"] = -118.03001108128538
+    data["EN"] = True
+    data["BC"] = random.uniform(0, 40.0)
+    data["posLat"] = 38.335 + random.uniform(0, 0.00099)
+    data["posLon"] = -121.092 + random.uniform(0, 0.00099)
     data["speed"] = random.uniform(0.0, 25.0)
     return data
 
