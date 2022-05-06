@@ -11,9 +11,9 @@ Raspberry Pi Network DHCP range = `192.168.1.2 - 192.168.1.255`
 Raspberry Pi PtP ip = `192.168.3.1`
 
 
-Atomic Pi Network DHCP range = `192.168.2.2 - 192.168.2.255`
+Atomic Pi Network DHCP range = `192.168.4.2 - 192.168.4.255`
 
-Atomic Pi PtP ip = `192.168.3.2`
+Atomic Pi PtP ip = `192.168.4.1`
 
 # Boat Data ZMQ Network Spec
 
