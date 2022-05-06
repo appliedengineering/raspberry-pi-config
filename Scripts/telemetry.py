@@ -100,14 +100,17 @@ def enforceDataPackTypes(motordata):
 
     # ALL FLOATS ARE 64 BIT / EQUIVALENT TO DOUBLE
 
-    motordata["TP"] = int(motordata["TP"])
-    motordata["DP"] = int(motordata["DP"])
-    motordata["CP"] = float(motordata["CP"])
-    motordata["BV"] = float(motordata["BV"])
-    motordata["UV"] = bool(motordata["UV"])
-    motordata["SM"] = bool(motordata["SM"])
-    motordata["EN"] = bool(motordata["EN"])
-    motordata["BC"] = float(motordata["BC"])
+    try:
+       motordata["TP"] = int(motordata["TP"])
+       motordata["DP"] = int(motordata["DP"])
+       motordata["CP"] = float(motordata["CP"])
+       motordata["BV"] = float(motordata["BV"])
+       motordata["UV"] = bool(motordata["UV"])
+       motordata["SM"] = bool(motordata["SM"])
+       motordata["EN"] = bool(motordata["EN"])
+       motordata["BC"] = float(motordata["BC"])
+    except:
+       logging.critical("Unable to enforce motor controller data type")
 
     return motordata
 #
@@ -126,6 +129,7 @@ def readFromArduino(queue, exit_event):
                 continue
 
             d = enforceDataPackTypes(addSupplementaryData(motordata))
+            print(d)
             queue.put(msgpack.packb(d))
 
             logging.info('Producer received data.')
@@ -172,22 +176,22 @@ def receiveTimestampSync(exit_event):
         time.sleep(1)
 
 def receiveMotorStatus(exit_event):
-    motorStatus = False
     while not exit_event.is_set():
         try:
-            motorStatus = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
-            logging.info("Received new motor status")
-            motorctrl.sendMotorStatus(False)
+            m = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
+ #           logging.info("Received new motor status")
+ #           print("sending mtr status: ", motorStatus)
+            motorctrl.updateMotorStatus(m)
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
 #                logging.info("no motor status update msg")
+                motorctrl.sendMotorStatus()
                 pass
             else:
                 traceback.print_exc()
         except:
             traceback.print_exc()
             exit_event.set()
- #       motorctrl.sendMotorStatus(motorStatus)
         time.sleep(1)
 
 if __name__ == '__main__':
