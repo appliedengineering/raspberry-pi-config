@@ -17,7 +17,7 @@ import gpsdriver
 from alignmentcalc import alignmentcalc
 
 #
-motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB1", 115200)
+motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 115200)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 
 
@@ -96,6 +96,20 @@ def addSupplementaryData(motordata):
 
     return motordata
 
+def enforceDataPackTypes(motordata):
+
+    # ALL FLOATS ARE 64 BIT / EQUIVALENT TO DOUBLE
+
+    motordata["TP"] = int(motordata["TP"])
+    motordata["DP"] = int(motordata["DP"])
+    motordata["CP"] = float(motordata["CP"])
+    motordata["BV"] = float(motordata["BV"])
+    motordata["UV"] = bool(motordata["UV"])
+    motordata["SM"] = bool(motordata["SM"])
+    motordata["EN"] = bool(motordata["EN"])
+    motordata["BC"] = float(motordata["BC"])
+
+    return motordata
 #
 
 def readFromArduino(queue, exit_event):
@@ -104,13 +118,16 @@ def readFromArduino(queue, exit_event):
         try:
             #b = removeExtraBytes(link.read_until(end).rstrip(end))
             b = motorctrl.read()
+#            print("read data from mtrctrl: ", b)
             try:
                 motordata = msgpack.unpackb(b)
             except Exception:
                 logging.critical("invalid mtrctrl data")
                 continue
 
-            queue.put(msgpack.packb(addSupplementaryData(motordata)))
+            d = enforceDataPackTypes(addSupplementaryData(motordata))
+            queue.put(msgpack.packb(d))
+
             logging.info('Producer received data.')
         except:
             traceback.print_exc()
@@ -125,6 +142,7 @@ def broadcastDataZmq(queue, exit_event):
             # queue.get(True, 2) blocks with a 2 second timeout
             # If still empty after 2 seconds, throws Queue.Empty
             data = queue.get(True, 2)
+#            logging.info(data)
             pub.send(data)
             logging.info('Consumer sending data. Queue size is %d.', queue.qsize())
         except Queue.Empty:
@@ -144,7 +162,7 @@ def receiveTimestampSync(exit_event):
             sendSyncRequestSuccess()
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
-                logging.info("no timestamp update msg")
+#                logging.info("no timestamp update msg")
                 pass    # no message ready yet
             else:
                 traceback.print_exc()
@@ -159,18 +177,18 @@ def receiveMotorStatus(exit_event):
         try:
             motorStatus = msgpack.unpackb(pair.recv(flags=zmq.NOBLOCK))
             logging.info("Received new motor status")
-            motorctrl.sendMotorStatus(motorStatus)
+            motorctrl.sendMotorStatus(False)
         except zmq.ZMQError as e:
             if e.errno == zmq.EAGAIN:
-                logging.info("no motor status update msg")
+#                logging.info("no motor status update msg")
                 pass
             else:
                 traceback.print_exc()
         except:
             traceback.print_exc()
             exit_event.set()
-        motorctrl.sendMotorStatus(motorStatus)
-        time.sleep(0.1)
+ #       motorctrl.sendMotorStatus(motorStatus)
+        time.sleep(1)
 
 if __name__ == '__main__':
     try:

@@ -24,10 +24,10 @@ class motorcontrollerdriver:
         if isOn:
             d = 5
         try:
-            #print(d)
-            self.__mtrctrlSer.send(d + "\r\n")
-        except Exception:
-            print("Unable to send motor controller status")
+            r = str(d) + "\n"
+            self.__mtrctrlSer.write(r.encode())
+        except Exception as e:
+            print(e)
             return False
         return True
 

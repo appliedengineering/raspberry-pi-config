@@ -9,7 +9,7 @@ import time
 import compassmodule
 import servodriver
 import gpsdriver
-import alignmentcalc
+from alignmentcalc import alignmentcalc
 import zmqdriver
 
 # Set logging verbosity
@@ -21,8 +21,8 @@ log_level = logging.INFO
 compass = compassmodule.compassmodule("/dev/ttyUSB0", 9600)
 servo = servodriver.servodriver(26, 0.15)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
-zmq = zmqdriver.zmqdriver("192.168.3.2") # 192.168.3.2 for atomic pi
-alignmentc = alignmentcalc.alignmentcalc()
+zmq = zmqdriver.zmqdriver("192.168.0.161") # 192.168.3.2 for atomic pi
+#alignmentc = alignmentcalc.alignmentcalc()
 
 ## Env Vars
 
@@ -68,20 +68,22 @@ def positioningThread(exit_event):
       try:
          boatC = gps.getCoordinates() # lat, lon
          zmq.transmitPosition(boatC[0], boatC[1])
+         print("boat pos = ", boatC[0], boatC[1])
 
          groundC = zmq.receivePosition() # lat, lon
-         
+
          if len(groundC) != 2:
             print(f"No ground coordinates")
-            time.sleep(1)
+            time.sleep(0.1)
             continue
 
          if len(boatC) != 2 or len(groundC) != 2:
             print(f"INVALID COORDINATES IN POS THREAD - {len(boatC)} : {len(groundC)}")
             time.sleep(0.01)
             continue
-         
-         targetHeading = alignmentc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])
+
+         print("Valid coords ", boatC, groundC)
+         targetHeading = alignmentcalc.getAngle(boatC[0], boatC[1], groundC[0], groundC[1])
 
       except:
          traceback.print_exc()

@@ -3,8 +3,10 @@ from time import sleep
 
 mxp = 0.0024 # 0.0025
 mnp = 0.0004
+#mxp = 0.002
 
 servo = Servo(26, min_pulse_width=mnp, max_pulse_width=mxp)
+#servo = Servo(26)
 
 print(servo.max_pulse_width)
 print(servo.min_pulse_width)
