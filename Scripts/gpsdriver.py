@@ -11,12 +11,13 @@ class gpsdriver:
 
    def getCoordinates(self): # lat, lon
       raw = self.__readSer()
-
-      timeoutC = 0
-      while timeoutC < 100 and not raw.startswith(b"$GPGGA"):
-          raw = self.__readSer()
-          timeoutC += 1
-          time.sleep(0.01)
+#      raw = self.__readSer()
+ #     timeoutC = 0
+ #     while timeoutC < 100 and not raw.startswith(b"$GPGGA"):
+ #         raw = self.__readSer()
+#          print(raw)
+ #         timeoutC += 1
+  #        time.sleep(0.01)
 
       if (raw.startswith(b"$GPGGA")):
           try:

@@ -3,9 +3,9 @@ import serial
 import msgpack
 
 class motorcontrollerdriver:
-    __isMotorControllerOn = True
+    __isMotorControllerOn = False
 
-    def __init__(self, p, b = 9600): # "/dev/ttyUSB0", 9600
+    def __init__(self, p, b = 115200): # "/dev/ttyUSB0", 9600
         self.__mtrctrlSer = serial.Serial(
 	        port=p,
 	        baudrate = b,
@@ -32,7 +32,7 @@ class motorcontrollerdriver:
            d = 5 # 5 is on
         try:
            r = str(d) + "\n"
-           print("sending to mtrctrl: ", r)
+#           print("sending to mtrctrl: ", r)
            self.__mtrctrlSer.write(r.encode())
         except Exception as e:
            print(e)

@@ -1,3 +1,4 @@
+
 # Telemetry ZeroMQ Transmitter
 # Copyright (c) 2020 Applied Engineering
 
@@ -17,7 +18,7 @@ import gpsdriver
 from alignmentcalc import alignmentcalc
 
 #
-motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 115200)
+motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB1", 115200)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 
 
@@ -75,77 +76,106 @@ def validCoordinate(coordinate):
     lon = coordinate[1]
     return (lat != 0.0) and (lat != -1.0) and (lon != 0.0) and (lon != -1.0)
 
-def addSupplementaryData(motordata):
+def addSuppData(m):
     global previousBoatCoordinates
     global previousBoatTimestamp
 
-    # TIMESTAMP
     timestamp = round(time.time(), 3)
-    motordata["timeStamp"] = timestamp
-    # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
+    m["timeStamp"] = timestamp
 
-    # COORDINATES
-    boatC = gps.getCoordinates() # lat lon
-    motordata["posLat"] = boatC[0] # lat
-    motordata["posLon"] = boatC[1] # lon
+    boatC = gps.getCoordinates()
+    # boatC = [10.0, 10.0]
+    m["posLat"] = boatC[0]
+    m["posLon"] = boatC[1]
 
-    # SPEED
     speed = 0.0
+
     if len(previousBoatCoordinates) > 0 and validCoordinate(boatC) and validCoordinate(previousBoatCoordinates):
-        distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
-        timeDelta = timestamp - previousBoatTimestamp
-        speed = round(distanceDelta / timeDelta, 3)
+       distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
+       timeDelta = timestamp - previousBoatTimestamp
+       speed = round(distanceDelta / timeDelta, 3)
 
     if not validCoordinate(previousBoatCoordinates) or validCoordinate(boatC):
-        previousBoatCoordinates = boatC
-        previousBoatTimestamp = timestamp
+       previousBoatCoordinates = boatC
+       previousBoatTimestamp = timestamp
 
-    motordata["speed"] = speed
+    m["speed"] = speed
 
-    return motordata
+#    print("DATA, ", m)
+
+    return m
+
+#def addSupplementaryData(motordata):
+#    print("call supp data")
+#    global previousBoatCoordinates
+#    global previousBoatTimestamp
+
+#    print("before timestamp")
+
+    # TIMESTAMP
+#    timestamp = round(time.time(), 3)
+#    motordata["timeStamp"] = timestamp
+    # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
+
+#    print("after timestamp")
+
+    # COORDINATES
+#    boatC = gps.getCoordinates() # lat lon
+#    motordata["posLat"] = boatC[0] # lat
+#    motordata["posLon"] = boatC[1] # lon
+#    motordata["posLat"] = 1.0
+#    motordata["posLon"] = 1.0
+
+#    print("after pos")
+
+    # SPEED
+#    speed
+#    if len(previousBoatCoordinates) > 0 and validCoordinate(boatC) and validCoordinate(previousBoatCoordinates):
+#        distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
+#        timeDelta = timestamp - previousBoatTimestamp
+#        speed = round(distanceDelta / timeDelta, 3)
+
+#    if not validCoordinate(previousBoatCoordinates) or validCoordinate(boatC):
+#        previousBoatCoordinates = boatC
+#        previousBoatTimestamp = timestamp
+
 
 def enforceDataPackTypes(motordata):
 
     # ALL FLOATS ARE 64 BIT / EQUIVALENT TO DOUBLE
 
-    try:
-       motordata["TP"] = int(motordata["TP"])
-       motordata["DP"] = int(motordata["DP"])
-       motordata["CP"] = float(motordata["CP"])
-       motordata["BV"] = float(motordata["BV"])
-       motordata["UV"] = bool(motordata["UV"])
-       motordata["SM"] = bool(motordata["SM"])
-       motordata["EN"] = bool(motordata["EN"])
-       motordata["BC"] = float(motordata["BC"])
-    except:
-       logging.critical("Unable to enforce motor controller data type")
+    motordata["TP"] = int(motordata["TP"])
+    motordata["DP"] = int(motordata["DP"])
+    motordata["CP"] = float(motordata["CP"] / 100.0)
+    motordata["BV"] = float(motordata["BV"] / 100.0)
+    motordata["UV"] = bool(motordata["UV"])
+    motordata["SM"] = bool(motordata["SM"])
+    motordata["EN"] = bool(motordata["EN"])
+    motordata["BC"] = float(motordata["BC"] / 100.0)
 
     return motordata
-#
+
 
 def readFromArduino(queue, exit_event):
-    '''Read data from serial.'''
-    while not exit_event.is_set():
-        try:
-            #b = removeExtraBytes(link.read_until(end).rstrip(end))
-            b = motorctrl.read()
-#            print("read data from mtrctrl: ", b)
-            try:
-                motordata = msgpack.unpackb(b)
-            except Exception:
-                logging.critical("invalid mtrctrl data")
-                continue
+     while not exit_event.is_set():
+         b = motorctrl.read()
+#         print("read data from mtrctrl: ", b)
 
-            d = enforceDataPackTypes(addSupplementaryData(motordata))
-            print(d)
-            queue.put(msgpack.packb(d))
+         try:
+            motordata = msgpack.unpackb(b)
+         except Exception:
+            logging.critical("invalid mtrctrl data")
+            continue
 
-            logging.info('Producer received data.')
-        except:
-            traceback.print_exc()
-            exit_event.set()
-    logging.info('Producer received event. Exiting now.')
-    #link.close()
+         motordata = enforceDataPackTypes(motordata)
+#         motordata = addSupplementaryData(motordata)
+#         print("before adding data to queue")
+         queue.put(motordata)
+
+         print(motordata)
+         logging.info("Producer received data")
+         time.sleep(0.01)
+
 
 def broadcastDataZmq(queue, exit_event):
     '''Broadcast data with ZeroMQ.'''
@@ -154,8 +184,11 @@ def broadcastDataZmq(queue, exit_event):
             # queue.get(True, 2) blocks with a 2 second timeout
             # If still empty after 2 seconds, throws Queue.Empty
             data = queue.get(True, 2)
-#            logging.info(data)
-            pub.send(data)
+ #           print("GOT DATA")
+            #data = addSupplementary(data)
+            data = addSuppData(data)
+            logging.info(data)
+            pub.send(msgpack.packb(data))
             logging.info('Consumer sending data. Queue size is %d.', queue.qsize())
         except Queue.Empty:
             pass    # no message ready yet

@@ -18,14 +18,14 @@ try:
    while True:
       raw = mtrctrlSer.readline()
       raw = raw[:-4]
-      #print(raw)
+      print(raw)
       print(msgpack.unpackb(raw))
       #print(mtrctrlSer.readline())
-      test = 5 - test
-      print(test)
-      r = str(test) + "\n"
-      mtrctrlSer.write(r.encode())
-      time.sleep(2)
+#      test = 5 - test
+#      print(test)
+#      r = str(test) + "\n"
+#      mtrctrlSer.write(r.encode())
+      time.sleep(0.01)
 except Exception as e:
    print(e)
 except KeyboardInterrupt:
