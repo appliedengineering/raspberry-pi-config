@@ -3,7 +3,7 @@ import serial
 import msgpack
 
 class motorcontrollerdriver:
-    __isMotorControllerOn = False
+    __isMotorControllerOn = True
 
     def __init__(self, p, b = 9600): # "/dev/ttyUSB0", 9600
         self.__mtrctrlSer = serial.Serial(

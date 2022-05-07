@@ -68,6 +68,13 @@ def sendSyncRequestSuccess():
     # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
 #    return msgpack.packb(buffer)
 
+def validCoordinate(coordinate):
+    if len(coordinate) != 2:
+       return False
+    lat = coordinate[0]
+    lon = coordinate[1]
+    return (lat != 0.0) and (lat != -1.0) and (lon != 0.0) and (lon != -1.0)
+
 def addSupplementaryData(motordata):
     global previousBoatCoordinates
     global previousBoatTimestamp
@@ -84,13 +91,14 @@ def addSupplementaryData(motordata):
 
     # SPEED
     speed = 0.0
-    if len(previousBoatCoordinates) > 0:
+    if len(previousBoatCoordinates) > 0 and validCoordinate(boatC) and validCoordinate(previousBoatCoordinates):
         distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
         timeDelta = timestamp - previousBoatTimestamp
         speed = round(distanceDelta / timeDelta, 3)
 
-    previousBoatCoordinates = boatC
-    previousBoatTimestamp = timestamp
+    if not validCoordinate(previousBoatCoordinates) or validCoordinate(boatC):
+        previousBoatCoordinates = boatC
+        previousBoatTimestamp = timestamp
 
     motordata["speed"] = speed
 
