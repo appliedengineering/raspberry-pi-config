@@ -80,64 +80,30 @@ def addSuppData(m):
     global previousBoatCoordinates
     global previousBoatTimestamp
 
+    # TIMESTAMP
     timestamp = round(time.time(), 3)
     m["timeStamp"] = timestamp
 
+    # COORDINATES
     boatC = gps.getCoordinates()
     # boatC = [10.0, 10.0]
     m["posLat"] = boatC[0]
     m["posLon"] = boatC[1]
 
+    # SPEED
     speed = 0.0
-
     if len(previousBoatCoordinates) > 0 and validCoordinate(boatC) and validCoordinate(previousBoatCoordinates):
-       distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
-       timeDelta = timestamp - previousBoatTimestamp
-       speed = round(distanceDelta / timeDelta, 3)
+        distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
+        timeDelta = timestamp - previousBoatTimestamp
+        speed = round(distanceDelta / timeDelta, 3)
 
     if not validCoordinate(previousBoatCoordinates) or validCoordinate(boatC):
-       previousBoatCoordinates = boatC
-       previousBoatTimestamp = timestamp
+        previousBoatCoordinates = boatC
+        previousBoatTimestamp = timestamp
 
     m["speed"] = speed
 
-#    print("DATA, ", m)
-
     return m
-
-#def addSupplementaryData(motordata):
-#    print("call supp data")
-#    global previousBoatCoordinates
-#    global previousBoatTimestamp
-
-#    print("before timestamp")
-
-    # TIMESTAMP
-#    timestamp = round(time.time(), 3)
-#    motordata["timeStamp"] = timestamp
-    # NOTE: timeStamp is a 64 bit Float or Double NOT a 32 bit float as is the case with the other data
-
-#    print("after timestamp")
-
-    # COORDINATES
-#    boatC = gps.getCoordinates() # lat lon
-#    motordata["posLat"] = boatC[0] # lat
-#    motordata["posLon"] = boatC[1] # lon
-#    motordata["posLat"] = 1.0
-#    motordata["posLon"] = 1.0
-
-#    print("after pos")
-
-    # SPEED
-#    speed
-#    if len(previousBoatCoordinates) > 0 and validCoordinate(boatC) and validCoordinate(previousBoatCoordinates):
-#        distanceDelta = alignmentcalc.distanceBetween(previousBoatCoordinates[0], previousBoatCoordinates[1], boatC[0], boatC[1])
-#        timeDelta = timestamp - previousBoatTimestamp
-#        speed = round(distanceDelta / timeDelta, 3)
-
-#    if not validCoordinate(previousBoatCoordinates) or validCoordinate(boatC):
-#        previousBoatCoordinates = boatC
-#        previousBoatTimestamp = timestamp
 
 
 def enforceDataPackTypes(motordata):
