@@ -122,7 +122,7 @@ def enforceDataPackTypes(motordata):
     return motordata
 
 
-def readFromArduino(queue, exit_event):
+def readFromArduino(exit_event):
      while not exit_event.is_set():
          b = motorctrl.read()
 #         print("read data from mtrctrl: ", b)
@@ -134,35 +134,14 @@ def readFromArduino(queue, exit_event):
             continue
 
          motordata = enforceDataPackTypes(motordata)
-#         motordata = addSupplementaryData(motordata)
+         motordata = addSuppData(motordata)
 #         print("before adding data to queue")
-         queue.put(motordata)
+         #queue.put(motordata)
+         pub.send(msgpack.packb(data))
 
          print(motordata)
          logging.info("Producer received data")
          time.sleep(0.01)
-
-
-def broadcastDataZmq(queue, exit_event):
-    '''Broadcast data with ZeroMQ.'''
-    while not exit_event.is_set() or not queue.empty():
-        try:
-            # queue.get(True, 2) blocks with a 2 second timeout
-            # If still empty after 2 seconds, throws Queue.Empty
-            data = queue.get(True, 2)
- #           print("GOT DATA")
-            #data = addSupplementary(data)
-            data = addSuppData(data)
-            logging.info(data)
-            pub.send(msgpack.packb(data))
-            logging.info('Consumer sending data. Queue size is %d.', queue.qsize())
-        except Queue.Empty:
-            pass    # no message ready yet
-        except:
-            traceback.print_exc()
-            exit_event.set()
-    logging.info('Consumer received event. Exiting now.')
-    pub.close()
 
 def receiveTimestampSync(exit_event):
     while not exit_event.is_set():
@@ -204,14 +183,11 @@ def receiveMotorStatus(exit_event):
 if __name__ == '__main__':
     try:
         logging.basicConfig(format='[%(asctime)s] %(levelname)s: %(message)s', level=log_level, datefmt="%H:%M:%S")
-        # Set up data queue
-        pipeline = queue.Queue(maxsize=100)
         # Create exit event
         exit_event = threading.Event()
         # Spawn worker threads
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            executor.submit(readFromArduino, pipeline, exit_event)
-            executor.submit(broadcastDataZmq, pipeline, exit_event)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            executor.submit(readFromArduino, exit_event)
             executor.submit(receiveTimestampSync, exit_event)
             executor.submit(receiveMotorStatus, exit_event)
     except KeyboardInterrupt:
