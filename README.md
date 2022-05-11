@@ -27,11 +27,11 @@ Raspberry Pi Boat Timestamp Reply Socket Port = Boat Data Port + `1` (`55561`)
 
 `DP` = Duty Percentage (0-180) `uint64_t` or `int`
 
-`CP` = Chip Temperature `double`
+~~`CP` = Chip Temperature `double`~~
 
 `BV` = Battery Voltage `double`
 
-`UV` = Under Voltage Protection `bool`
+~~`UV` = Under Voltage Protection `bool`~~
 
 `SM` = Solar Mode `bool`
 
