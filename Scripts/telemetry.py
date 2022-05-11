@@ -18,7 +18,7 @@ import gpsdriver
 from alignmentcalc import alignmentcalc
 
 #
-motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB1", 115200)
+motorctrl = motorcontrollerdriver.motorcontrollerdriver("/dev/ttyUSB0", 9600)
 gps = gpsdriver.gpsdriver("/dev/serial0", 115200)
 
 
@@ -43,8 +43,7 @@ rep.bind("tcp://*:55561")
 pair = context.socket(zmq.PAIR)
 pair.connect("tcp://localhost:5553")
 
-# Define message end sequence.
-end = b'EOM\n'
+#
 
 previousBoatCoordinates = []
 previousBoatTimestamp = 0.0
@@ -77,6 +76,9 @@ def validCoordinate(coordinate):
     return (lat != 0.0) and (lat != -1.0) and (lon != 0.0) and (lon != -1.0)
 
 def addSuppData(m):
+
+    #print(" --- BEFORE SUPP DATA")
+
     global previousBoatCoordinates
     global previousBoatTimestamp
 
@@ -103,6 +105,8 @@ def addSuppData(m):
 
     m["speed"] = speed
 
+    #print(" --- AFTER SUPP DATA")
+
     return m
 
 
@@ -110,22 +114,27 @@ def enforceDataPackTypes(motordata):
 
     # ALL FLOATS ARE 64 BIT / EQUIVALENT TO DOUBLE
 
+    #print(" --- BEFORE ENFORCE")
+
     motordata["TP"] = int(motordata["TP"])
     motordata["DP"] = int(motordata["DP"])
-    motordata["CP"] = float(motordata["CP"] / 100.0)
+    #motordata["CP"] = float(motordata["CP"] / 100.0)
     motordata["BV"] = float(motordata["BV"] / 100.0)
-    motordata["UV"] = bool(motordata["UV"])
+    #motordata["UV"] = bool(motordata["UV"])
     motordata["SM"] = bool(motordata["SM"])
     motordata["EN"] = bool(motordata["EN"])
     motordata["BC"] = float(motordata["BC"] / 100.0)
+
+    #print(" --- AFTER ENFORCE")
 
     return motordata
 
 
 def readFromArduino(exit_event):
+     #print("readFromArduino")
      while not exit_event.is_set():
          b = motorctrl.read()
-#         print("read data from mtrctrl: ", b)
+         #print("read data from mtrctrl: ", b)
 
          try:
             motordata = msgpack.unpackb(b)
@@ -134,13 +143,14 @@ def readFromArduino(exit_event):
             continue
 
          motordata = enforceDataPackTypes(motordata)
+         #print("IN BETWEEN")
          motordata = addSuppData(motordata)
-#         print("before adding data to queue")
+         #print("before adding data to queue")
          #queue.put(motordata)
-         pub.send(msgpack.packb(data))
+         pub.send(msgpack.packb(motordata))
 
          print(motordata)
-         logging.info("Producer received data")
+         #logging.info("Producer received data")
          time.sleep(0.01)
 
 def receiveTimestampSync(exit_event):
