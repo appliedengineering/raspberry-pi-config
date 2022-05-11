@@ -4,11 +4,25 @@ import msgpack
 
 mtrctrlSer = serial.Serial(
 	port="/dev/ttyUSB0",
-	baudrate=115200,
+	baudrate=9600,
 )
 
-_ = mtrctrlSer.readline() # throw away first read
-_2 = mtrctrlSer.readline() # throw away second read
+def readSer(a_serial, eol=b'\r\n'):
+   leneol = len(eol)
+   line = bytearray()
+   while True:
+      c = a_serial.read(1)
+      if c:
+         line += c
+         if line[-leneol:] == eol:
+            break
+      else:
+         break
+   a_serial.reset_input_buffer()
+   return bytes(line)
+
+_ = readSer(mtrctrlSer) # throw away first read
+_2 = readSer(mtrctrlSer) # throw away second read
 
 #print("after first two reads")
 
@@ -16,10 +30,9 @@ test = 5
 
 try:
    while True:
-      raw = mtrctrlSer.readline()
-      raw = raw[:-4]
+      raw = readSer(mtrctrlSer)
       print(raw)
-      print(msgpack.unpackb(raw))
+      #print(msgpack.unpackb(raw))
       #print(mtrctrlSer.readline())
 #      test = 5 - test
 #      print(test)
